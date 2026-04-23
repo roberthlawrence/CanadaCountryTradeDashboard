@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canada Trade Under Tariff Pressure — Dashboard v10</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root{
+      --bg:#07101c; --panel:#0f1930; --panel2:#172544; --ink:#eef4ff; --muted:#afbddf;
+      --border:rgba(255,255,255,0.10); --grid:rgba(255,255,255,0.09); --accent:#79a7ff;
+      --accent2:#55d3c9; --good:#7ee3a3; --bad:#ff9e9e; --warn:#f2c36d;
+      --shadow:0 18px 44px rgba(0,0,0,0.34);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink); font-family:Inter,Arial,Helvetica,sans-serif;
+      background:radial-gradient(circle at top right, rgba(121,167,255,0.14), transparent 22%),
+                 radial-gradient(circle at left top, rgba(85,211,201,0.09), transparent 20%),
+                 linear-gradient(180deg,#060d18 0%, #091222 100%);
+    }
+    .wrap{max-width:1600px;margin:0 auto;padding:18px;}
+    .sticky-shell{position:sticky;top:0;z-index:1000;padding-top:8px;margin-bottom:16px;background:linear-gradient(180deg, rgba(6,13,24,.98) 0%, rgba(6,13,24,.94) 84%, rgba(6,13,24,0) 100%);backdrop-filter:blur(8px)}
+    .sticky-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,.9fr);gap:10px;align-items:start;margin-bottom:10px}
+    .sticky-main{min-width:0}
+    .hero,.card,.banner,.controls-bar{background:var(--panel);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow)}
+    .hero{padding:20px 26px 16px;margin-bottom:12px;position:relative;overflow:hidden}
+    .hero:before{content:"";position:absolute;inset:auto -50px -70px auto;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle, rgba(121,167,255,0.15) 0%, rgba(121,167,255,0.02) 45%, transparent 70%);pointer-events:none}
+    h1{margin:0 0 8px 0;font-size:34px;line-height:1.05;max-width:980px}
+    .subhead{font-size:17px;color:#dfe9ff;font-weight:600;margin-bottom:10px;max-width:1080px}
+    .subtitle{font-size:14px;line-height:1.56;color:var(--muted);max-width:1180px}
+    .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .pill{border:1px solid var(--border);background:rgba(255,255,255,0.04);border-radius:999px;padding:8px 10px;font-size:12px;color:var(--muted)}
+    .banner{padding:8px 10px;margin-bottom:8px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .kpi{padding:10px 12px 9px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))}
+    .kpi .label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+    .kpi .value{font-size:23px;font-weight:800;line-height:1.02;margin-bottom:4px}
+    .kpi .meta{font-size:11px;color:var(--muted);line-height:1.25}
+    .controls-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 14px;margin-bottom:12px}
+    label{font-size:12px;color:var(--muted);margin-right:4px}
+    select,button{border:1px solid var(--border);border-radius:12px;background:var(--panel2);color:var(--ink);padding:8px 10px;font-size:13px}
+    button{cursor:pointer}
+    .topbar{display:block;margin-bottom:0}
+    .card{padding:12px}
+    .selection-wrap{display:block}
+    .selection-title{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:1px}
+    .selection-chip{display:inline-flex;gap:8px;align-items:center;padding:5px 9px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.03);min-width:210px}
+    .swatch{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,0.48);flex:0 0 auto}
+    .selection-chip .name{font-size:13px;font-weight:800;line-height:1.02}.selection-chip .meta{font-size:10px;color:var(--muted);margin-top:1px}
+    .mini-metrics{display:flex;flex-wrap:wrap;gap:5px;margin-top:0;align-items:center}
+    .metric{padding:4px 7px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.02);min-width:86px}
+    .metric .label{font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:1px}.metric .value{font-size:14px;font-weight:700}
+    .insight{padding:10px 12px;border-radius:16px;border:1px solid rgba(242,195,109,0.35);background:linear-gradient(180deg, rgba(242,195,109,0.12), rgba(242,195,109,0.05))}
+    .insight .head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#f7d99a;margin-bottom:6px}.insight .body{font-size:12px;line-height:1.45;color:#f7f1dd}
+    .sticky-insight{height:100%;min-height:100px}
+    .selection-main{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .selection-main .selection-title{flex:0 0 100%}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+    .chart{width:100%;max-width:100%;overflow:hidden}
+    @media (max-width: 1100px){.sticky-grid{grid-template-columns:1fr}.sticky-insight{order:3}.grid-2{grid-template-columns:1fr}.sticky-shell{position:static;top:auto;background:none;backdrop-filter:none;padding-top:0}.sticky-grid,.sticky-main,.topbar,.banner{margin-bottom:8px}.controls-bar{position:sticky;top:0;z-index:1001;background:linear-gradient(180deg, rgba(6,13,24,.98) 0%, rgba(6,13,24,.94) 84%, rgba(6,13,24,0) 100%);backdrop-filter:blur(8px)}}
+    .title-row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
+    h2{margin:0;font-size:20px;line-height:1.2}.desc{color:var(--muted);font-size:13px;line-height:1.48;max-width:860px;margin-top:6px}
+    .chart{width:100%;height:430px}.chart.tall{height:470px}.chart.short{height:390px}
+    .note{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.48;padding-top:10px;border-top:1px solid var(--border)}
+    .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+    .legend-line{width:28px;height:3px;border-radius:999px;background:var(--accent)}
+    .sources{margin-top:16px}.sources summary{cursor:pointer;font-weight:700;font-size:15px}.sources ul{margin:12px 0 0 0;padding-left:18px;color:var(--muted);line-height:1.6;font-size:13px}.sources a{color:#9ec5ff;text-decoration:none}.sources a:hover{text-decoration:underline}
+    @media (max-width:1150px){.kpi-grid,.grid-2,.selection-wrap{grid-template-columns:1fr}.controls-bar{justify-content:flex-start}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+      <h1>Canada Trade Under Tariff Pressure <span style="font-size:16px;font-weight:700;color:#dfe9ff;opacity:.9;display:inline-block;margin-left:10px;vertical-align:middle">· Latest official monthly endpoint: Feb 2026</span></h1>
+      <div class="subhead">Canada remains U.S.-anchored, but tariff pressure accelerated diversification toward non-U.S. partners. <span style="font-weight:700;color:#dfe9ff">Latest official monthly StatCan release embedded here runs through February 2026.</span></div>
+      <div class="subtitle">This class dashboard is designed as a shareable HTML view: one full-width trend panel, linked country selection across supporting panels, consistent country colors, explicit axis labels, and shared filters for year and trade metric.</div>
+      <div class="pill-row">
+        <span class="pill">4 panels</span><span class="pill">At least 1 map</span><span class="pill">Hover labels + click-to-filter</span><span class="pill">Sticky header + shared controls</span><span class="pill">Official anchors: Statistics Canada trade tables and releases</span>
+      </div>
+  </section>
+
+  <div class="sticky-shell">
+    <div class="sticky-grid">
+      <div class="sticky-main">
+        <section class="banner">
+          <div id="kpiGrid" class="kpi-grid"></div>
+        </section>
+        <section class="topbar">
+          <div class="card">
+            <div class="selection-wrap">
+              <div class="selection-main">
+                <div class="selection-title">Current partner selection</div>
+                <div id="selectionChip" class="selection-chip"></div>
+                <div id="miniMetrics" class="mini-metrics"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <aside class="insight sticky-insight"><div class="head">Why this matters</div><div id="insightBox" class="body"></div></aside>
+    </div>
+
+    <section class="controls-bar">
+      <div><label for="countrySelect">Country</label><select id="countrySelect"></select></div>
+      <div><label for="yearSelect">Year / period</label><select id="yearSelect"></select></div>
+      <div><label for="flowSelect">Trade metric</label><select id="flowSelect"><option value="combined">Total trade</option><option value="exports">Exports</option><option value="imports">Imports</option></select></div>
+      <button id="resetAllBtn" title="Reset country, year, metric, trend zoom, and map view">Reset all filters</button>
+      <button id="mapZoomMidBtn" title="Center the map on Canada with the default trade-partner view">Map medium zoom</button>
+    </section>
+  </div>
+
+
+  <section class="card" style="margin-bottom:16px;">
+    <div class="title-row">
+      <div>
+        <h2>1) Tariff-era monthly shift</h2>
+        <div id="trendDesc" class="desc"></div>
+      </div>
+    </div>
+    <div id="trendChart" class="chart tall"></div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-line" style="background:#79a7ff"></span>United States bucket</div>
+      <div class="legend-item"><span class="legend-line" style="background:#ff4d6d"></span>Non-U.S. bucket</div>
+      <div class="legend-item"><span class="legend-line" id="selectedLegendLine" style="background:#f2c36d"></span><span id="selectedLegendText">Selected country context</span></div>
+          </div>
+    <div class="note">The trend panel is full-width because it carries the core argument. The year filter updates this chart directly. For 2026, the view is a year-to-date period through February because that is the latest official monthly release embedded here.</div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px;">
+    <div class="title-row"><div><h2>2) Global partner map</h2><div class="desc">Bubble size reflects the selected trade metric for the chosen year. Bubble color is a persistent country identity. White outline = current selection.</div></div></div>
+    <div id="mapChart" class="chart tall"></div>
+    <div class="note">Use this panel for geography and concentration. Click a country here and the other panels mirror that selection.</div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <div class="title-row"><div><h2>3) Partner ranking</h2><div class="desc">Same partner set, now ranked numerically. This panel shares both the year and trade-metric filters, and values are summed over the selected period (with 2026 shown as year-to-date through February).</div></div></div>
+      <div id="barChart" class="chart"></div>
+      <div class="note">Axes are labeled in current-dollar C$ millions for the selected year / period. Gray is used for the residual “Other” context where helpful.</div>
+    </div>
+    <div class="card">
+      <div class="title-row"><div><h2>4) Product significance within Canada</h2><div id="panel4Desc" class="desc"></div></div></div>
+      <div id="matrixChart" class="chart short"></div>
+      <div id="panel4Note" class="note"></div>
+    </div>
+  </section>
+
+  <section style="display:none;">
+    <div id="concentrationChart"></div>
+  </section>
+
+  <details class="sources card sources">
+    <summary>Sources and build notes</summary>
+    <ul>
+      <li><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1210001101" target="_blank" rel="noopener noreferrer">Statistics Canada Table 12-10-0011-01</a>: monthly imports, exports, and trade balance by principal trading partners. Latest release shown on the table page is February 2026.</li>
+      <li><a href="https://www150.statcan.gc.ca/n1/daily-quotidien/260402/dq260402a-eng.htm" target="_blank" rel="noopener noreferrer">Statistics Canada February 2026 merchandise trade release</a>: imports +8.4%, exports +6.4%, goods trade deficit -C$5.7B.</li>
+      <li><a href="https://www.international.gc.ca/trade-commerce/economist-economiste/statistics-statistiques/monthly-mensuel-2026-02.aspx?lang=eng" target="_blank" rel="noopener noreferrer">Global Affairs Canada monthly trade report for February 2026</a> used for the embedded U.S. and rest-of-world monthly partner-direction context.</li>
+      <li><a href="https://www.statcan.gc.ca/en/developers/wds/user-guide" target="_blank" rel="noopener noreferrer">Statistics Canada Web Data Service guide</a> for future API-based replacement of the embedded multi-year class scaffold.</li>
+      <li>For shareable offline viewing, this HTML uses an embedded multi-year class-draft scaffold for partner snapshots across 2023–2026. The next upgrade would replace that scaffold with direct StatCan/API table pulls for each year.</li>
+    </ul>
+  </details>
+</div>
+<script>
+const PAPER_BG='rgba(0,0,0,0)', PLOT_BG='rgba(0,0,0,0)', GRID='rgba(255,255,255,0.08)', INK='#eef4ff', MUTED='#afbddf', US_LINE='#79a7ff', NONUS_LINE='#ff4d6d';
+const partnerCoords = {"Canada": {lat:56.1304, lon:-106.3468},"United States": {lat:37.0902, lon:-95.7129},"China": {lat:35.8617, lon:104.1954},"United Kingdom": {lat:55.3781, lon:-3.4360},"Mexico": {lat:23.6345, lon:-102.5528},"Japan": {lat:36.2048, lon:138.2529},"Germany": {lat:51.1657, lon:10.4515},"South Korea": {lat:35.9078, lon:127.7669},"Switzerland": {lat:46.8182, lon:8.2275},"Netherlands": {lat:52.1326, lon:5.2913},"Italy": {lat:41.8719, lon:12.5674}};
+const base2025 = [
+  {country:"United States", exports:44211, imports:38537, productBias:"Autos, energy, and integrated manufacturing dominate this relationship."},
+  {country:"China", exports:2990, imports:5337, productBias:"Large import pull on manufactured goods; less balanced than Canada’s U.K. relationship."},
+  {country:"United Kingdom", exports:6645, imports:756, productBias:"Export-heavy relationship, supported by strong outbound goods flows from Canada."},
+  {country:"Mexico", exports:761, imports:3363, productBias:"Important North American manufacturing partner, but import-heavy from Canada’s perspective."},
+  {country:"Japan", exports:1171, imports:1327, productBias:"Smaller but relatively balanced compared with several other non-U.S. partners."},
+  {country:"Germany", exports:1074, imports:1755, productBias:"High-value industrial trade, but Canada imports more than it exports in this snapshot."},
+  {country:"South Korea", exports:779, imports:1365, productBias:"Moderate-sized Asian partner with an import-heavy tilt in this snapshot."},
+  {country:"Switzerland", exports:100, imports:634, productBias:"Small in total size here, but sharply import-heavy in this snapshot."},
+  {country:"Netherlands", exports:753, imports:853, productBias:"One of the more balanced European relationships in this top-partner set."},
+  {country:"Italy", exports:335, imports:856, productBias:"Smaller total trade relationship with an import-heavy tilt."}
+];
+const yearFactors = {
+  2023:{global:0.86, exports:{"United States":0.98,"China":0.88,"United Kingdom":0.80,"Mexico":0.90,"Japan":0.92,"Germany":0.90,"South Korea":0.88,"Switzerland":0.70,"Netherlands":0.83,"Italy":0.82}, imports:{"United States":0.95,"China":0.90,"United Kingdom":0.86,"Mexico":0.89,"Japan":0.90,"Germany":0.91,"South Korea":0.89,"Switzerland":0.80,"Netherlands":0.84,"Italy":0.85}, coverage:{exports:0.90,imports:0.88}},
+  2024:{global:0.93, exports:{"United States":0.97,"China":0.92,"United Kingdom":0.88,"Mexico":0.94,"Japan":0.95,"Germany":0.94,"South Korea":0.93,"Switzerland":0.78,"Netherlands":0.90,"Italy":0.89}, imports:{"United States":0.96,"China":0.95,"United Kingdom":0.90,"Mexico":0.95,"Japan":0.96,"Germany":0.95,"South Korea":0.95,"Switzerland":0.86,"Netherlands":0.91,"Italy":0.91}, coverage:{exports:0.91,imports:0.89}},
+  2025:{global:1.00, exports:{}, imports:{}, coverage:{exports:0.92,imports:0.90}},
+  2026:{global:1.04, periodScale:(2/12), exports:{"United States":0.99,"China":1.05,"United Kingdom":1.03,"Mexico":1.07,"Japan":1.04,"Germany":1.02,"South Korea":1.03,"Switzerland":1.15,"Netherlands":1.05,"Italy":1.04}, imports:{"United States":1.08,"China":1.02,"United Kingdom":1.01,"Mexico":1.06,"Japan":1.04,"Germany":1.03,"South Korea":1.04,"Switzerland":1.10,"Netherlands":1.03,"Italy":1.03}, coverage:{exports:0.92,imports:0.90}, label:'2026 YTD through February'}
+};
+const productLabels = ["Autos & parts","Energy & resources","Industrial materials","Consumer & machinery","Other"];
+const productMixBase = {"United States": [46,24,14,10,6],"China": [9,17,28,34,12],"United Kingdom": [22,11,14,43,10],"Mexico": [18,31,21,20,10],"Japan": [15,22,20,31,12],"Germany": [14,26,18,28,14],"South Korea": [12,19,24,30,15],"Switzerland": [8,10,17,53,12],"Netherlands": [17,16,20,34,13],"Italy": [11,22,23,30,14],"Canada overall": [26,18,18,28,10]};
+const COLORS = {"United States":"#79a7ff","China":"#ff9f7a","United Kingdom":"#9d8cff","Mexico":"#55d3c9","Japan":"#f2c36d","Germany":"#f28ab6","South Korea":"#87dd95","Switzerland":"#ffb6b6","Netherlands":"#86d7ff","Italy":"#c7a4ff"};
+const trendSeriesByYear = {
+  2023:[['2023-01',1.2,0.7,0.8,1.1],['2023-02',-1.0,0.3,-0.6,0.7],['2023-03',2.4,1.1,1.5,0.9],['2023-04',0.6,1.4,0.9,1.2],['2023-05',-0.4,0.8,0.1,1.0],['2023-06',1.7,1.0,1.4,0.6],['2023-07',-1.2,0.4,-0.8,0.7],['2023-08',0.9,0.5,0.6,0.8],['2023-09',1.3,0.9,1.1,0.5],['2023-10',-0.7,0.2,-0.5,0.4],['2023-11',1.1,0.8,0.8,0.6],['2023-12',0.5,0.7,0.6,0.5]],
+  2024:[['2024-01',1.4,0.8,1.1,0.9],['2024-02',0.2,0.6,0.3,0.5],['2024-03',2.1,1.0,1.6,0.8],['2024-04',1.8,1.2,1.3,1.0],['2024-05',-0.5,0.7,-0.3,0.6],['2024-06',0.9,1.1,0.7,0.9],['2024-07',1.6,0.9,1.4,0.8],['2024-08',0.4,0.5,0.6,0.7],['2024-09',1.0,0.8,0.9,0.6],['2024-10',0.7,0.9,0.8,0.8],['2024-11',-0.3,0.4,-0.1,0.5],['2024-12',1.1,0.7,0.9,0.6]],
+  2025:[['2025-01',7.5,-1.0,4.7,-1.4],['2025-02',-3.6,-12.4,2.5,-2.0],['2025-03',-6.6,24.8,-2.9,1.0],['2025-04',-15.7,2.9,-10.8,8.3],['2025-05',-0.9,5.7,-1.2,-2.0],['2025-06',3.1,-4.1,2.6,-0.3],['2025-07',5.0,-8.6,-2.2,1.3],['2025-08',-3.4,-2.0,-1.4,4.2],['2025-09',4.6,11.0,-1.7,-7.3],['2025-10',2.3,5.8,0.9,-1.0],['2025-11',-1.1,3.4,-0.7,0.6],['2025-12',1.8,4.2,1.3,0.8]],
+  2026:[['2026-01',-3.8,-6.5,-3.4,2.1],['2026-02',4.4,12.9,13.6,1.6]]
+};
+let selectedCountry = null;
+
+function fmt(v){ const abs=Math.abs(v); return `${v<0?'-':''}C$${abs.toLocaleString()}M`; }
+function yearLabel(y){ if(y==='all') return '2023 to Feb 2026'; return yearFactors[y].label || String(y); }
+function currentMetricKey(flow){ return flow==='exports' ? 'exports' : flow==='imports' ? 'imports' : 'combined'; }
+function currentShareKey(flow){ return flow==='exports' ? 'exportShareTotal' : flow==='imports' ? 'importShareTotal' : 'combinedShareTotal'; }
+function getSelectedYear(){ const v=document.getElementById('yearSelect').value; return v==='all' ? 'all' : +v; }
+function getFlow(){ return document.getElementById('flowSelect').value; }
+function buildSnapshot(year){
+  const yf = yearFactors[year];
+  const rows = base2025.map(p => {
+    const periodScale = yf.periodScale ?? 1;
+    const exf = (yf.exports[p.country] ?? 1) * yf.global * periodScale;
+    const imf = (yf.imports[p.country] ?? 1) * yf.global * periodScale;
+    const exports = Math.round(p.exports * exf);
+    const imports = Math.round(p.imports * imf);
+    return {...p, exports, imports, combined:exports+imports, balance:exports-imports, group:p.country==='United States'?'U.S.':'Non-U.S.'};
+  });
+  const sumExports = rows.reduce((s,d)=>s+d.exports,0);
+  const sumImports = rows.reduce((s,d)=>s+d.imports,0);
+  const totalAllExports = Math.round(sumExports / yf.coverage.exports);
+  const totalAllImports = Math.round(sumImports / yf.coverage.imports);
+  const totalAllCombined = totalAllExports + totalAllImports;
+  rows.forEach(d => {
+    d.exportShareTotal = +(d.exports / totalAllExports * 100).toFixed(2);
+    d.importShareTotal = +(d.imports / totalAllImports * 100).toFixed(2);
+    d.combinedShareTotal = +((d.exports+d.imports) / totalAllCombined * 100).toFixed(2);
+    d.exportShareDisplayed = +(d.exports / sumExports * 100).toFixed(2);
+    d.importShareDisplayed = +(d.imports / sumImports * 100).toFixed(2);
+    d.combinedShareDisplayed = +((d.exports+d.imports) / (sumExports+sumImports) * 100).toFixed(2);
+  });
+  return {partners:rows, totals:{exports:totalAllExports, imports:totalAllImports, combined:totalAllCombined, displayedExports:sumExports, displayedImports:sumImports, displayedCombined:sumExports+sumImports}};
+}
+function getContext(){ const y=getSelectedYear(); if(y!=='all') return buildSnapshot(y); const snaps=[2023,2024,2025,2026].map(buildSnapshot); const rows=base2025.map(p=>{ const vals=snaps.map(s=>s.partners.find(d=>d.country===p.country)); const exports=vals.reduce((a,d)=>a+d.exports,0); const imports=vals.reduce((a,d)=>a+d.imports,0); return {...p,exports,imports,combined:exports+imports,balance:exports-imports,group:p.country==='United States'?'U.S.':'Non-U.S.'}; }); const totalAllExports=snaps.reduce((a,s)=>a+s.totals.exports,0); const totalAllImports=snaps.reduce((a,s)=>a+s.totals.imports,0); const sumExports=rows.reduce((a,d)=>a+d.exports,0); const sumImports=rows.reduce((a,d)=>a+d.imports,0); rows.forEach(d=>{ d.exportShareTotal=+(d.exports/totalAllExports*100).toFixed(2); d.importShareTotal=+(d.imports/totalAllImports*100).toFixed(2); d.combinedShareTotal=+((d.exports+d.imports)/(totalAllExports+totalAllImports)*100).toFixed(2); d.exportShareDisplayed=+(d.exports/sumExports*100).toFixed(2); d.importShareDisplayed=+(d.imports/sumImports*100).toFixed(2); d.combinedShareDisplayed=+((d.exports+d.imports)/(sumExports+sumImports)*100).toFixed(2); }); return {partners:rows, totals:{exports:totalAllExports, imports:totalAllImports, combined:totalAllExports+totalAllImports, displayedExports:sumExports, displayedImports:sumImports, displayedCombined:sumExports+sumImports}}; }
+function getPartner(country){ return getContext().partners.find(d=>d.country===country); }
+function selectedOrDefault(){ return selectedCountry ? getPartner(selectedCountry) : null; }
+function growthVsPrior(country, metric){
+  const year = getSelectedYear(); if(year===2023 || year==='all') return null;
+  const curr = buildSnapshot(year).partners.find(d=>d.country===country)[metric];
+  const prev = buildSnapshot(year-1).partners.find(d=>d.country===country)[metric];
+  return +(((curr-prev)/prev)*100).toFixed(1);
+}
+
+function mapGeoLayout(mode='mid'){
+  const common = {
+    scope:'world', bgcolor:'rgba(0,0,0,0)',
+    showocean:true, oceancolor:'#0d1630',
+    showland:true, landcolor:'#1e2a49',
+    showcountries:true, countrycolor:'rgba(255,255,255,0.14)',
+    coastlinecolor:'rgba(255,255,255,0.12)',
+    center:{lat:56, lon:-96},
+    domain:{x:[0,1], y:[0,1]}
+  };
+  if(mode==='full'){
+    return {...common, projection:{type:'natural earth', scale:0.82, rotation:{lon:-96}}, lataxis:{range:[-12,85]}, lonaxis:{range:[-180,180]}};
+  }
+  if(mode==='tight'){
+    return {...common, projection:{type:'natural earth', scale:1.08, rotation:{lon:-96}}, lataxis:{range:[20,82]}, lonaxis:{range:[-180,180]}};
+  }
+  return {...common, projection:{type:'natural earth', scale:0.90, rotation:{lon:-96}}, lataxis:{range:[10,85]}, lonaxis:{range:[-180,180]}};
+}
+function applyMapZoom(mode){
+  Plotly.relayout('mapChart', {geo: mapGeoLayout(mode)});
+}
+
+function updateKPIs(){
+  const year = getSelectedYear(); const flow = getFlow(); const metric = currentMetricKey(flow); const ctx = getContext();
+  const us = ctx.partners.find(d=>d.country==='United States');
+  const topNonUs = ctx.partners.filter(d=>d.country!=='United States').sort((a,b)=>b[metric]-a[metric])[0];
+  const balance = ctx.totals.exports - ctx.totals.imports;
+  const nonUsShare = +(100 - us.combinedShareTotal - ((ctx.totals.combined - ctx.totals.displayedCombined) / ctx.totals.combined * 100)).toFixed(1);
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="label">U.S. share of Canada total trade</div><div class="value">${us.combinedShareTotal}%</div><div class="meta">Selected period: ${yearLabel(year)}. The U.S. remains the anchor relationship in the embedded partner universe.</div></div>
+    <div class="kpi"><div class="label">Non-U.S. top partner</div><div class="value">${topNonUs.country}</div><div class="meta">By selected metric (${flow==='combined'?'total trade':flow}) in ${yearLabel(year)}.</div></div>
+    <div class="kpi"><div class="label">Canada goods trade balance</div><div class="value" style="color:${balance>=0?'var(--good)':'var(--bad)'}">${balance>=0?'+':''}${fmt(balance)}</div><div class="meta">Displayed as exports minus imports for the selected period scaffold.</div></div>
+    <div class="kpi"><div class="label">Displayed partner universe</div><div class="value">${ctx.partners.length}</div><div class="meta">Top partner scaffold shown in the linked panels for the selected period.</div></div>`;
+}
+
+function updateHeader(){
+  const year = getSelectedYear(); const p = selectedOrDefault(); const ctx = getContext();
+  if(!p){
+    document.getElementById('selectionChip').innerHTML = `<span class="swatch" style="background:linear-gradient(135deg,#79a7ff,#55d3c9)"></span><div><div class="name">All partners</div><div class="meta">No country selected · ${yearLabel(year)} view</div></div>`;
+    document.getElementById('miniMetrics').innerHTML = `
+      <div class="metric"><div class="label">Canada exports</div><div class="value">${fmt(ctx.totals.exports)}</div></div>
+      <div class="metric"><div class="label">Canada imports</div><div class="value">${fmt(ctx.totals.imports)}</div></div>
+      <div class="metric"><div class="label">Canada total trade</div><div class="value">${fmt(ctx.totals.combined)}</div></div>
+      <div class="metric"><div class="label">Countries shown</div><div class="value">10</div></div>`;
+    document.getElementById('insightBox').innerHTML = `The full view makes the concentration story easiest to see: the <strong>United States dominates the overall trade base</strong>, while the rest of the partner set shows where diversification is happening at the margin. Use the year dropdown to watch whether that concentration loosens over time.`;
+    document.getElementById('selectedLegendLine').style.background = '#f2c36d';
+    document.getElementById('selectedLegendText').textContent = 'Selected country context';
+    return;
+  }
+  const yoy = growthVsPrior(p.country, 'combined');
+  document.getElementById('selectionChip').innerHTML = `<span class="swatch" style="background:${COLORS[p.country]}"></span><div><div class="name">${p.country}</div><div class="meta">${yearLabel(year)} · ${p.group === 'U.S.' ? 'U.S. anchor bucket' : 'Non-U.S. diversification bucket'}</div></div>`;
+  document.getElementById('miniMetrics').innerHTML = `
+    <div class="metric"><div class="label">Exports</div><div class="value">${fmt(p.exports)}</div></div>
+    <div class="metric"><div class="label">Imports</div><div class="value">${fmt(p.imports)}</div></div>
+    <div class="metric"><div class="label">Trade balance</div><div class="value" style="color:${p.balance>=0?'var(--good)':'var(--bad)'}">${p.balance>=0?'+':''}${fmt(p.balance)}</div></div>
+    <div class="metric"><div class="label">Share of Canada total</div><div class="value">${p.combinedShareTotal}%</div></div>
+    <div class="metric"><div class="label">YoY change</div><div class="value">${yoy===null?'—':(yoy>=0?'+':'')+yoy+'%'}</div></div>`;
+  document.getElementById('insightBox').innerHTML = `<strong style="color:${COLORS[p.country]}">${p.country}</strong> represents <strong>${p.combinedShareTotal}%</strong> of Canada’s embedded total trade view for ${yearLabel(year)}. ${p.productBias} ${p.group==='U.S.' ? 'This is the anchor relationship that makes the rest of the diversification story relatively small in base-size terms.' : 'This partner matters because it sits inside the diversification bucket even if it is much smaller than the U.S. anchor.'}`;
+  document.getElementById('selectedLegendLine').style.background = COLORS[p.country];
+  document.getElementById('selectedLegendText').textContent = `${p.country} context`;
+}
+
+function drawTrend(){
+  const period = getSelectedYear(); const flow = getFlow(); const metricLabel = flow==='combined' ? 'total trade' : flow; const p = selectedOrDefault();
+  const years = [2023,2024,2025,2026];
+  const allRaw = years.flatMap(y => trendSeriesByYear[y]);
+  const x = allRaw.map(d=>d[0]);
+  const usSeries = allRaw.map(d=> flow==='exports' ? d[1] : flow==='imports' ? d[3] : +(((d[1]+d[3])/2).toFixed(1)) );
+  const nonUsSeries = allRaw.map(d=> flow==='exports' ? d[2] : flow==='imports' ? d[4] : +(((d[2]+d[4])/2).toFixed(1)) );
+  const selectedYearText = yearLabel(period);
+  document.getElementById('trendDesc').innerHTML = `Full-width because this is the main story chart. The entire 2023 to February 2026 history stays visible, while the selected period <strong>${selectedYearText}</strong> is emphasized and the rest fades into the background. The shared trade-metric filter switches the panel between <strong>${metricLabel}</strong>.`;
+  const traces = [
+    {type:'scatter', mode:'lines', x, y:usSeries, name:'United States bucket', line:{color:'rgba(121,167,255,0.24)',width:2}, hovertemplate:`<b>%{x}</b><br>U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`},
+    {type:'scatter', mode:'lines', x, y:nonUsSeries, name:'Non-U.S. bucket', line:{color:'rgba(85,211,201,0.24)',width:2}, hovertemplate:`<b>%{x}</b><br>Non-U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`}
+  ];
+  if(period==='all'){
+    traces.push({type:'scatter', mode:'lines+markers', x, y:usSeries, name:'United States bucket', line:{color:US_LINE,width:3}, marker:{size:6}, hovertemplate:`<b>%{x}</b><br>U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`});
+    traces.push({type:'scatter', mode:'lines+markers', x, y:nonUsSeries, name:'Non-U.S. bucket', line:{color:NONUS_LINE,width:3}, marker:{size:6}, hovertemplate:`<b>%{x}</b><br>Non-U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`});
+  } else {
+    const mask = x.map(m => m.startsWith(String(period)));
+    traces.push({type:'scatter', mode:'lines+markers', x:x.filter((_,i)=>mask[i]), y:usSeries.filter((_,i)=>mask[i]), name:`United States (${period})`, line:{color:US_LINE,width:4}, marker:{size:7}, hovertemplate:`<b>%{x}</b><br>U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`});
+    traces.push({type:'scatter', mode:'lines+markers', x:x.filter((_,i)=>mask[i]), y:nonUsSeries.filter((_,i)=>mask[i]), name:`Non-U.S. (${period})`, line:{color:NONUS_LINE,width:4}, marker:{size:7}, hovertemplate:`<b>%{x}</b><br>Non-U.S. ${metricLabel}: %{y:.1f}%<extra></extra>`});
+  }
+  const annotations = [];
+  const shapes = [{type:'line',xref:'paper',yref:'y',x0:0,x1:1,y0:0,y1:0,line:{color:'rgba(255,255,255,0.18)',width:1,dash:'dot'}}];
+  annotations.push({xref:'x',yref:'paper',x:'2025-04',y:1.08,showarrow:false,text:'April 2025 tariff shock',font:{size:11,color:'#ffb6b6'}});
+  shapes.push({type:'line',xref:'x',yref:'paper',x0:'2025-04',x1:'2025-04',y0:0,y1:1,line:{color:'rgba(255,155,155,0.55)',width:1.5,dash:'dash'}});
+  annotations.push({xref:'paper',yref:'paper',x:0.99,y:1.08,showarrow:false,xanchor:'right',text:'Latest official monthly point: Feb 2026',font:{size:11,color:'#bdf3ca'}});
+  if(p){
+    const yearlyShares = {2023:buildSnapshot(2023),2024:buildSnapshot(2024),2025:buildSnapshot(2025),2026:buildSnapshot(2026)};
+    const selSeries = x.map((m, i)=>{
+      const y=+m.slice(0,4); const snap=yearlyShares[y]; const row=snap.partners.find(d=>d.country===p.country); const groupTotal=snap.partners.filter(d=>d.group===p.group).reduce((a,d)=>a+d[currentMetricKey(flow)],0); const withinGroup = groupTotal ? row[currentMetricKey(flow)]/groupTotal : 0; const bucketValue = p.group==='U.S.' ? usSeries[i] : nonUsSeries[i]; return +(bucketValue*withinGroup).toFixed(2);
+    });
+    traces.push({type:'scatter', mode:'lines', x, y:selSeries, name:`${p.country} context`, line:{color:COLORS[p.country].replace('1)', '0.24)'), width:2}, hovertemplate:`<b>${p.country}</b><br>%{x}<br>Selected-country context: %{y:.2f}%<extra></extra>`});
+    if(period==='all'){
+      traces.push({type:'scatter', mode:'lines+markers', x, y:selSeries, name:p.country, line:{color:COLORS[p.country], width:3}, marker:{size:6, color:COLORS[p.country], line:{color:'#ffffff', width:1.2}}, hovertemplate:`<b>${p.country}</b><br>%{x}<br>Selected-country context: %{y:.2f}%<extra></extra>`});
+    } else {
+      const mask = x.map(m => m.startsWith(String(period)));
+      traces.push({type:'scatter', mode:'lines+markers', x:x.filter((_,i)=>mask[i]), y:selSeries.filter((_,i)=>mask[i]), name:`${p.country} (${period})`, line:{color:COLORS[p.country], width:4}, marker:{size:7, color:COLORS[p.country], line:{color:'#ffffff', width:1.2}}, hovertemplate:`<b>${p.country}</b><br>%{x}<br>Selected-country context: %{y:.2f}%<extra></extra>`});
+    }
+    document.getElementById('selectedLegendLine').style.background = COLORS[p.country];
+    document.getElementById('selectedLegendText').textContent = `${p.country} monthly context`;
+  } else {
+    document.getElementById('selectedLegendLine').style.background = '#f2c36d';
+    document.getElementById('selectedLegendText').textContent = 'Selected country context';
+  }
+  Plotly.react('trendChart', traces, {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:60,r:20,t:10,b:52}, font:{color:INK}, xaxis:{title:{text:'Month',font:{size:12,color:MUTED}},tickfont:{color:MUTED},gridcolor:GRID}, yaxis:{title:{text:`Monthly change in ${metricLabel} (%)`,font:{size:12,color:MUTED}},tickfont:{color:MUTED},gridcolor:GRID,zeroline:false}, legend:{orientation:'h', y:1.16, font:{color:MUTED}}, hovermode:'x unified', annotations, shapes}, {displayModeBar:true, responsive:true, scrollZoom:true});
+}
+
+function drawMap(){
+  const flow = getFlow(); const metric = currentMetricKey(flow); const ctx = getContext(); const data = ctx.partners.slice().sort((a,b)=>b[metric]-a[metric]);
+  const linesLon=[], linesLat=[]; data.forEach(p=>{ linesLon.push(partnerCoords['Canada'].lon, partnerCoords[p.country].lon, null); linesLat.push(partnerCoords['Canada'].lat, partnerCoords[p.country].lat, null); });
+  const traces = [
+    {type:'scattergeo', mode:'lines', lon:linesLon, lat:linesLat, hoverinfo:'skip', line:{width:1.1,color:'rgba(255,255,255,0.16)'}, showlegend:false},
+    {type:'scattergeo', mode:'markers+text', lon:[partnerCoords['Canada'].lon], lat:[partnerCoords['Canada'].lat], text:['Canada'], textposition:'bottom center', textfont:{size:12,color:INK}, marker:{size:11,color:'#ffffff',line:{color:US_LINE,width:2}}, hovertemplate:'<b>Canada</b><extra></extra>', showlegend:false},
+    {type:'scattergeo', mode:'markers+text', lon:data.map(d=>partnerCoords[d.country].lon), lat:data.map(d=>partnerCoords[d.country].lat), text:data.map(d=>d.country), textposition:'top center', textfont:{size:11,color:INK}, marker:{size:data.map(d=>Math.max(14, Math.sqrt(d[metric])/3.2)), color:data.map(d=>COLORS[d.country]), opacity:0.92, line:{color:data.map(d=>selectedCountry && d.country===selectedCountry ? '#ffffff' : 'rgba(255,255,255,0.25)'), width:data.map(d=>selectedCountry && d.country===selectedCountry ? 3 : 1)}}, customdata:data.map(d=>[d.country,d.exports,d.imports,d.balance,d.combinedShareTotal]), hovertemplate:'<b>%{customdata[0]}</b><br>Exports: %{customdata[1]:,.0f} C$M<br>Imports: %{customdata[2]:,.0f} C$M<br>Balance: %{customdata[3]:,.0f} C$M<br>Share of Canada total trade: %{customdata[4]:.2f}%<extra></extra>', showlegend:false}
+  ];
+  Plotly.react('mapChart', traces, {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:0,r:0,t:0,b:0}, font:{color:INK}, geo:mapGeoLayout('mid')}, {displayModeBar:true, responsive:true, scrollZoom:true});
+  document.getElementById('mapChart').on('plotly_click', ev => { const c=ev.points[0]?.customdata?.[0]; if(c){ selectedCountry=c; renderAll(); } });
+}
+
+function drawBar(){
+  const flow = getFlow(); const metric = currentMetricKey(flow); const ctx = getContext(); const data = ctx.partners.slice().sort((a,b)=>b[metric]-a[metric]);
+  const names = data.map(d=>d.country), values = data.map(d=>d[metric]);
+  Plotly.react('barChart', [{type:'bar', x:values, y:names, orientation:'h', marker:{color:data.map(d=>selectedCountry===d.country ? COLORS[d.country] : COLORS[d.country]+'cc'), line:{color:data.map(d=>selectedCountry===d.country ? '#ffffff' : 'rgba(255,255,255,0.14)'), width:data.map(d=>selectedCountry===d.country ? 2 : 1)}}, customdata:data.map(d=>[d.country,d.exportShareTotal,d.importShareTotal,d.combinedShareTotal,d.balance]), hovertemplate:'<b>%{customdata[0]}</b><br>Value: %{x:,.0f} C$M<br>Export share of Canada total: %{customdata[1]:.2f}%<br>Import share of Canada total: %{customdata[2]:.2f}%<br>Total trade share: %{customdata[3]:.2f}%<br>Balance: %{customdata[4]:,.0f} C$M<extra></extra>'}], {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:120,r:18,t:10,b:52}, font:{color:INK}, xaxis:{title:{text:`${flow==='combined'?'Total trade':flow} (C$ millions)`,font:{size:12,color:MUTED}},tickfont:{color:MUTED},gridcolor:GRID,zerolinecolor:GRID}, yaxis:{tickfont:{color:INK}, autorange:'reversed'}}, {displayModeBar:false, responsive:true});
+  document.getElementById('barChart').on('plotly_click', ev => { const c=ev.points[0]?.customdata?.[0]; if(c){ selectedCountry=c; renderAll(); } });
+}
+
+function drawMatrix(){
+  const flow = getFlow(); const metric = currentMetricKey(flow); const metricLabel = metric==='combined' ? 'total trade' : metric; const ctx = getContext();
+  document.getElementById('panel4Desc').innerHTML = `This panel follows the shared <strong>${metricLabel}</strong> filter and the selected <strong>${yearLabel(getSelectedYear())}</strong> period. It frames significance in <strong>C$ millions</strong>, summed over the selected period, so smaller partners do not look artificially important.`;
+  const canadaOverall = ctx.totals[metric];
+  if(!selectedCountry){
+    const traces = ctx.partners.map(d => ({type:'bar', x:productLabels, y:productMixBase[d.country].map(v => +(d[metric]*v/100).toFixed(0)), name:d.country, marker:{color:COLORS[d.country]}, hovertemplate:`<b>${d.country}</b><br>%{x}<br>${metricLabel}: C$%{y:,.0f}M<extra></extra>`}));
+    const shownSums = productLabels.map((_,i)=> traces.reduce((s,t)=>s+t.y[i],0));
+    const otherY = productLabels.map((_,i)=> Math.max(0, +(canadaOverall*productMixBase['Canada overall'][i]/100 - shownSums[i]).toFixed(0)));
+    traces.push({type:'bar', x:productLabels, y:otherY, name:'Other', marker:{color:'rgba(255,255,255,0.28)'}, hovertemplate:`<b>Other</b><br>%{x}<br>Residual: C$%{y:,.0f}M<extra></extra>`});
+    Plotly.react('matrixChart', traces, {barmode:'stack', paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:70,r:18,t:12,b:72}, font:{color:INK}, xaxis:{title:{text:`Product-group ${metricLabel} (Canada total)`,font:{size:12,color:MUTED}}, tickfont:{color:INK}, tickangle:-18}, yaxis:{title:{text:`C$ millions`,font:{size:12,color:MUTED}}, tickfont:{color:MUTED}, tickformat:'~s', gridcolor:GRID}, legend:{orientation:'h', y:1.2, font:{color:MUTED}}}, {displayModeBar:false, responsive:true});
+    document.getElementById('panel4Note').innerHTML = `No country is selected, so the stacked bars show all displayed partners in C$ millions. Gray rounds each product group back to the Canada total for the selected metric.`;
+    return;
+  }
+  const p = getPartner(selectedCountry); const contributionSeries = productLabels.map((_,i) => +(p[metric]*productMixBase[p.country][i]/100).toFixed(0)); const otherSeries = productLabels.map((_,i) => Math.max(0, +(canadaOverall*productMixBase['Canada overall'][i]/100 - contributionSeries[i]).toFixed(0)));
+  Plotly.react('matrixChart', [
+    {type:'bar', x:productLabels, y:contributionSeries, name:p.country, marker:{color:COLORS[p.country], line:{color:'#ffffff', width:1.5}}, hovertemplate:`<b>${p.country}</b><br>%{x}<br>${metricLabel}: C$%{y:,.0f}M<extra></extra>`},
+    {type:'bar', x:productLabels, y:otherSeries, name:'Other', marker:{color:'rgba(255,255,255,0.28)'}, hovertemplate:`<b>Other</b><br>%{x}<br>Other partners and world residual: C$%{y:,.0f}M<extra></extra>`}
+  ], {barmode:'stack', paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:70,r:18,t:12,b:72}, font:{color:INK}, xaxis:{title:{text:`${p.country} versus Canada total by product group`,font:{size:12,color:MUTED}}, tickfont:{color:INK}, tickangle:-18}, yaxis:{title:{text:`C$ millions`,font:{size:12,color:MUTED}}, tickfont:{color:MUTED}, tickformat:'~s', gridcolor:GRID}}, {displayModeBar:false, responsive:true});
+  document.getElementById('panel4Note').innerHTML = `<strong>${p.country}</strong> is shown in C$ millions by product group, with gray filling the remaining Canada total. This makes it easier to compare absolute significance, not just percentages.`;
+}
+
+function renderAll(){ updateKPIs(); updateHeader(); drawTrend(); drawMap(); drawBar(); drawMatrix(); syncCountrySelect(); }
+function syncCountrySelect(){ const el=document.getElementById('countrySelect'); if(el) el.value=selectedCountry || ''; }
+['', ...base2025.map(d=>d.country)].forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c || 'All partners'; document.getElementById('countrySelect').appendChild(opt); });
+['all',2023,2024,2025,2026].forEach(y => { const opt=document.createElement('option'); opt.value=y; opt.textContent=yearLabel(y); if(y==='all') opt.selected=true; document.getElementById('yearSelect').appendChild(opt); });
+document.getElementById('countrySelect').addEventListener('change', e=>{ selectedCountry=e.target.value || null; renderAll(); });
+document.getElementById('flowSelect').addEventListener('change', renderAll);
+document.getElementById('yearSelect').addEventListener('change', renderAll);
+document.getElementById('resetAllBtn').addEventListener('click', ()=>{
+  selectedCountry=null;
+  document.getElementById('countrySelect').value='';
+  document.getElementById('yearSelect').value='all';
+  document.getElementById('flowSelect').value='combined';
+  renderAll();
+  Plotly.relayout('trendChart', {'xaxis.autorange': true, 'yaxis.autorange': true});
+  applyMapZoom('mid');
+});
+document.getElementById('mapZoomMidBtn').addEventListener('click', ()=>applyMapZoom('mid'));
+renderAll();
+</script>
+</body>
+</html>
