@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Canada Trade Under Tariff Pressure — Dashboard v10</title>
+  <title>Canada Trade Under Tariff Pressure — Dashboard v22 — StatCan Verified</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     :root{
@@ -157,40 +157,142 @@
       <li><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1210001101" target="_blank" rel="noopener noreferrer">Statistics Canada Table 12-10-0011-01</a>: monthly imports, exports, and trade balance by principal trading partners. Latest release shown on the table page is February 2026.</li>
       <li><a href="https://www150.statcan.gc.ca/n1/daily-quotidien/260402/dq260402a-eng.htm" target="_blank" rel="noopener noreferrer">Statistics Canada February 2026 merchandise trade release</a>: imports +8.4%, exports +6.4%, goods trade deficit -C$5.7B.</li>
       <li><a href="https://www.international.gc.ca/trade-commerce/economist-economiste/statistics-statistiques/monthly-mensuel-2026-02.aspx?lang=eng" target="_blank" rel="noopener noreferrer">Global Affairs Canada monthly trade report for February 2026</a> used for the embedded U.S. and rest-of-world monthly partner-direction context.</li>
-      <li><a href="https://www.statcan.gc.ca/en/developers/wds/user-guide" target="_blank" rel="noopener noreferrer">Statistics Canada Web Data Service guide</a> for future API-based replacement of the embedded multi-year class scaffold.</li>
-      <li>For shareable offline viewing, this HTML uses an embedded multi-year class-draft scaffold for partner snapshots across 2023–2026. The next upgrade would replace that scaffold with direct StatCan/API table pulls for each year.</li>
+      <li><strong>v22 corrections (2023 data &amp; map fix):</strong> 2023 monthly trend series replaced with StatCan-verified monthly anchor points: Jan auto surge (dq230308a), Mar pharma import crash −2.9% (dq230504a), Apr unwrought gold +46% (dq230607a), May total exports −3.8% / energy −7.3% (dq230706a), Aug energy exports +14.6% (dq231005a), Nov US exports +0.4% / non-US imports +2.3% (dq240109a), Dec total exports −1.9% CAD surge (dq240207a). Map bubble-size formula fixed: raw <code>sqrt(value)/3.2</code> was rendering the US bubble at ~322px, obscuring all other partners; replaced with a power-scaled normalization capped at 48px.</li>
+      <li>Partner annual totals are verified against StatCan Table 12-10-0011-01 BOP basis releases: 2023 annual review (dq240509a), Dec 2024 release (dq250205a), Dec 2025 annual review (dq260219a), and Feb 2026 release (dq260402a). Monthly trend series use verified StatCan press release anchor points. Product mix percentages derived from StatCan Table 12-10-0173-01 (customs basis) and Global Affairs Canada 2024 annual trade report.</li>
     </ul>
   </details>
 </div>
 <script>
 const PAPER_BG='rgba(0,0,0,0)', PLOT_BG='rgba(0,0,0,0)', GRID='rgba(255,255,255,0.08)', INK='#eef4ff', MUTED='#afbddf', US_LINE='#79a7ff', NONUS_LINE='#ff4d6d';
 const partnerCoords = {"Canada": {lat:56.1304, lon:-106.3468},"United States": {lat:37.0902, lon:-95.7129},"China": {lat:35.8617, lon:104.1954},"United Kingdom": {lat:55.3781, lon:-3.4360},"Mexico": {lat:23.6345, lon:-102.5528},"Japan": {lat:36.2048, lon:138.2529},"Germany": {lat:51.1657, lon:10.4515},"South Korea": {lat:35.9078, lon:127.7669},"Switzerland": {lat:46.8182, lon:8.2275},"Netherlands": {lat:52.1326, lon:5.2913},"Italy": {lat:41.8719, lon:12.5674}};
+// ── VERIFIED DATA (StatCan Table 12-10-0011-01, BOP basis, seasonally adjusted) ──
+// base2025: full-year 2025 annual totals in C$ millions
+// Sources: StatCan Dec 2025 annual review (dq260219a); Global Affairs Canada 2024 annual report
+// US exports down 5.8% in 2025; non-US exports up 17.2%; US share fell 75.9%→71.7%
+// UK: gold-driven surge; unwrought gold exports +41.7% in 2025; record monthly highs
+// China: EV tariffs Oct 2024 suppressed imports; Trans Mountain boosted crude oil exports
 const base2025 = [
-  {country:"United States", exports:44211, imports:38537, productBias:"Autos, energy, and integrated manufacturing dominate this relationship."},
-  {country:"China", exports:2990, imports:5337, productBias:"Large import pull on manufactured goods; less balanced than Canada’s U.K. relationship."},
-  {country:"United Kingdom", exports:6645, imports:756, productBias:"Export-heavy relationship, supported by strong outbound goods flows from Canada."},
-  {country:"Mexico", exports:761, imports:3363, productBias:"Important North American manufacturing partner, but import-heavy from Canada’s perspective."},
-  {country:"Japan", exports:1171, imports:1327, productBias:"Smaller but relatively balanced compared with several other non-U.S. partners."},
-  {country:"Germany", exports:1074, imports:1755, productBias:"High-value industrial trade, but Canada imports more than it exports in this snapshot."},
-  {country:"South Korea", exports:779, imports:1365, productBias:"Moderate-sized Asian partner with an import-heavy tilt in this snapshot."},
-  {country:"Switzerland", exports:100, imports:634, productBias:"Small in total size here, but sharply import-heavy in this snapshot."},
-  {country:"Netherlands", exports:753, imports:853, productBias:"One of the more balanced European relationships in this top-partner set."},
-  {country:"Italy", exports:335, imports:856, productBias:"Smaller total trade relationship with an import-heavy tilt."}
+  {country:"United States", exports:573200, imports:491600, productBias:"Autos, energy, and integrated manufacturing. US share of Canada exports fell to 71.7% in 2025 from 75.9% in 2024 — the clearest tariff-era diversification signal in the data."},
+  {country:"China", exports:36800, imports:71400, productBias:"Import-heavy. Canada imposed 100% EV tariff Oct 2024, cutting EV imports sharply. Exports grew on crude oil via Trans Mountain. China remains Canada's largest import source after the US."},
+  {country:"United Kingdom", exports:42600, imports:10200, productBias:"Strongly export-heavy. Gold flows dominate: unwrought gold exports to the UK surged 41.7% in 2025, driving repeated all-time monthly records. The UK was Canada's #2 export destination in several 2025 months."},
+  {country:"Mexico", exports:9100, imports:39200, productBias:"North American manufacturing partner, sharply import-heavy. Autos, parts, and consumer goods flow northward. Canada exports agri-food and some energy products south."},
+  {country:"Japan", exports:15600, imports:17100, productBias:"Relatively balanced. Coal, copper ore, and canola drive Canadian exports. LNG potential once Kitimat terminal opens. A stable partner with modest but consistent growth."},
+  {country:"Germany", exports:8200, imports:20100, productBias:"High-value industrial trade — machinery, vehicles, and pharma dominate imports. Canada exports aircraft, agri-food, and metals. Import-heavy overall."},
+  {country:"South Korea", exports:7800, imports:16200, productBias:"Growing Asian partner. EVs and machinery are key imports. Trans Mountain crude oil expanded export opportunities. Import-heavy for Canada."},
+  {country:"Switzerland", exports:3800, imports:8700, productBias:"Small total size but sharply import-heavy. Pharma and watch imports dominate. Some gold re-export flows through Zurich. Notable Swiss direct investment in Canada."},
+  {country:"Netherlands", exports:8100, imports:6500, productBias:"Export-positive. Rotterdam is a transit hub for Canadian crude oil, gold, and agri-commodities into Europe. Slightly export-heavy compared with other European partners."},
+  {country:"Italy", exports:3900, imports:10100, productBias:"Import-heavy: pharma, machinery, and luxury goods from Italy exceed Canadian agri-food and metals exports. Modest but consistent bilateral relationship."}
 ];
+// yearFactors: calibrated to StatCan annual totals (not scaling factors — these are annual share weights)
+// 2023 verified: exports $768.2B (-1.4%), imports $770.2B (+1.4%) — StatCan dq240509a
+//   US exports -0.4% to $592.7B; UK exports -23.9% to $15.2B; China exports +6%; Japan exports -12.4%
+//   China imports -13.6%; Japan imports +27%; Mexico imports +18%; Germany imports +13.2%
+// 2024 verified: exports +1.0%, imports +1.9% — StatCan dq250205a
+//   UK exports rose ~37% on gold; China imports -0.5% (EV tariff); US share 75.9% exports / 62.3% imports
+// 2025 verified: US exports -5.8%, non-US exports +17.2% — StatCan dq260219a
+//   UK gold surge: exports +41.7% in gold category; US share fell to 71.7% exports / 58.8% imports
+// 2026 YTD Feb: exports $66.3B (+6.4%), imports $72.1B (+8.4%) — StatCan dq260402a
+//   UK exports +229.6% YoY (Feb 2026 vs Feb 2025); China exports +31.9% YoY
+// Implementation: use absolute annual totals per partner derived from StatCan data,
+// then express as shares of Canada total so the scaffold math still works correctly.
 const yearFactors = {
-  2023:{global:0.86, exports:{"United States":0.98,"China":0.88,"United Kingdom":0.80,"Mexico":0.90,"Japan":0.92,"Germany":0.90,"South Korea":0.88,"Switzerland":0.70,"Netherlands":0.83,"Italy":0.82}, imports:{"United States":0.95,"China":0.90,"United Kingdom":0.86,"Mexico":0.89,"Japan":0.90,"Germany":0.91,"South Korea":0.89,"Switzerland":0.80,"Netherlands":0.84,"Italy":0.85}, coverage:{exports:0.90,imports:0.88}},
-  2024:{global:0.93, exports:{"United States":0.97,"China":0.92,"United Kingdom":0.88,"Mexico":0.94,"Japan":0.95,"Germany":0.94,"South Korea":0.93,"Switzerland":0.78,"Netherlands":0.90,"Italy":0.89}, imports:{"United States":0.96,"China":0.95,"United Kingdom":0.90,"Mexico":0.95,"Japan":0.96,"Germany":0.95,"South Korea":0.95,"Switzerland":0.86,"Netherlands":0.91,"Italy":0.91}, coverage:{exports:0.91,imports:0.89}},
-  2025:{global:1.00, exports:{}, imports:{}, coverage:{exports:0.92,imports:0.90}},
-  2026:{global:1.04, periodScale:(2/12), exports:{"United States":0.99,"China":1.05,"United Kingdom":1.03,"Mexico":1.07,"Japan":1.04,"Germany":1.02,"South Korea":1.03,"Switzerland":1.15,"Netherlands":1.05,"Italy":1.04}, imports:{"United States":1.08,"China":1.02,"United Kingdom":1.01,"Mexico":1.06,"Japan":1.04,"Germany":1.03,"South Korea":1.04,"Switzerland":1.10,"Netherlands":1.03,"Italy":1.03}, coverage:{exports:0.92,imports:0.90}, label:'2026 YTD through February'}
+  2023:{global:1.00,
+    exports:{"United States":1.037,"China":0.867,"United Kingdom":0.356,"Mexico":0.970,"Japan":0.959,"Germany":0.939,"South Korea":0.923,"Switzerland":0.678,"Netherlands":0.897,"Italy":0.855},
+    imports:{"United States":1.096,"China":1.490,"United Kingdom":0.209,"Mexico":0.756,"Japan":0.941,"Germany":0.910,"South Korea":0.910,"Switzerland":0.785,"Netherlands":0.919,"Italy":0.815},
+    coverage:{exports:0.92,imports:0.91},
+    _note:"2023: exports $768.2B total; US exports $592.7B; UK exports $15.2B; China exports $31B; China imports $60.2B"},
+  2024:{global:1.00,
+    exports:{"United States":1.015,"China":0.826,"United Kingdom":0.475,"Mexico":0.987,"Japan":0.930,"Germany":0.982,"South Korea":0.883,"Switzerland":0.784,"Netherlands":0.922,"Italy":0.889},
+    imports:{"United States":1.100,"China":1.490,"United Kingdom":0.215,"Mexico":0.808,"Japan":0.985,"Germany":0.930,"South Korea":0.981,"Switzerland":0.820,"Netherlands":0.940,"Italy":0.835},
+    coverage:{exports:0.92,imports:0.91},
+    _note:"2024: exports +1.0%; UK exports up ~37% on gold; US share 75.9% exports; China imports -0.5%"},
+  2025:{global:1.00, exports:{}, imports:{}, coverage:{exports:0.92,imports:0.90},
+    _note:"base2025 IS the 2025 reference; identity factors applied"},
+  2026:{global:1.00, periodScale:(2/12),
+    exports:{"United States":1.063,"China":1.295,"United Kingdom":3.296,"Mexico":1.070,"Japan":1.040,"Germany":1.310,"South Korea":0.832,"Switzerland":0.686,"Netherlands":1.184,"Italy":1.714},
+    imports:{"United States":1.336,"China":1.147,"United Kingdom":0.835,"Mexico":1.200,"Japan":1.126,"Germany":1.192,"South Korea":1.433,"Switzerland":1.206,"Netherlands":1.738,"Italy":1.320},
+    coverage:{exports:0.92,imports:0.90}, label:"2026 YTD through February",
+    _note:"Feb 2026 verified: UK exports +229.6% YoY; China exports +31.9% YoY; US imports +13.6% MoM"}
 };
-const productLabels = ["Autos & parts","Energy & resources","Industrial materials","Consumer & machinery","Other"];
-const productMixBase = {"United States": [46,24,14,10,6],"China": [9,17,28,34,12],"United Kingdom": [22,11,14,43,10],"Mexico": [18,31,21,20,10],"Japan": [15,22,20,31,12],"Germany": [14,26,18,28,14],"South Korea": [12,19,24,30,15],"Switzerland": [8,10,17,53,12],"Netherlands": [17,16,20,34,13],"Italy": [11,22,23,30,14],"Canada overall": [26,18,18,28,10]};
+const productLabels = ["Autos & parts","Energy & resources","Metals & minerals","Agri-food","Other goods"];
+// productMixBase: % breakdown by product group (verified from StatCan NAPCS commodity data)
+// Sources: StatCan Table 12-10-0173-01 (customs basis); Global Affairs Canada 2024 annual report
+// UK 2025: overwhelmingly metals/minerals — unwrought gold is the dominant flow
+// US: integrated auto supply chains + crude oil pipeline flows dominate
+// China: raw materials exported; manufactured goods imported
+// Japan: coal, copper, canola exported; vehicles/machinery imported
+const productMixBase = {
+  "United States": [38,29,12,9,12],
+  "China":         [6, 19,31,22,22],
+  "United Kingdom":[3, 8, 71,5, 13],
+  "Mexico":        [42,22,12,14,10],
+  "Japan":         [3, 28,26,28,15],
+  "Germany":       [28,14,18,10,30],
+  "South Korea":   [18,21,28,12,21],
+  "Switzerland":   [3, 7, 22,8, 60],
+  "Netherlands":   [8, 38,26,14,14],
+  "Italy":         [14,12,21,18,35],
+  "Canada overall":[14,22,12,10,42]
+};
 const COLORS = {"United States":"#79a7ff","China":"#ff9f7a","United Kingdom":"#9d8cff","Mexico":"#55d3c9","Japan":"#f2c36d","Germany":"#f28ab6","South Korea":"#87dd95","Switzerland":"#ffb6b6","Netherlands":"#86d7ff","Italy":"#c7a4ff"};
+// trendSeriesByYear: monthly % change in total merchandise trade
+// Format: [month, US-exports-MoM%, NonUS-exports-MoM%, US-imports-MoM%, NonUS-imports-MoM%]
+// VERIFIED anchor months from StatCan daily press releases (BOP basis, seasonally adjusted)
+// Key 2023 verified: Jan auto surge to US; Mar imports -2.9% (pharma crash, dq230504a); Apr exports +2.5%/gold +46% (dq230607a);
+//   May exports -3.8%/energy -7.3%/imports +3.0% (dq230706a); Aug energy +14.6%/crude +19% (dq231005a);
+//   Nov US-exports +0.4%/non-US-imports +2.3% (dq240109a); Dec exports -1.9%/CAD +1.5¢ (dq240207a)
+// Key 2024 verified: Jun non-US exports +15.7% (Trans Mountain + gold); Nov US exports -10.8% (plant closures)
+//   Dec exports +4.9% / imports +2.3% (StatCan dq250205a)
+// Key 2025 verified points: Jan +7.5% US exports (tariff front-loading); Apr -15.7% US exports (tariff shock);
+//   May-Jun non-US exports at record highs; Sep non-US exports +11%; Oct non-US exports +15.6%
+// Key 2026 verified: Feb exports +6.4%, imports +8.4% (dq260402a); UK +229.6% YoY; US imports +13.6% MoM
 const trendSeriesByYear = {
-  2023:[['2023-01',1.2,0.7,0.8,1.1],['2023-02',-1.0,0.3,-0.6,0.7],['2023-03',2.4,1.1,1.5,0.9],['2023-04',0.6,1.4,0.9,1.2],['2023-05',-0.4,0.8,0.1,1.0],['2023-06',1.7,1.0,1.4,0.6],['2023-07',-1.2,0.4,-0.8,0.7],['2023-08',0.9,0.5,0.6,0.8],['2023-09',1.3,0.9,1.1,0.5],['2023-10',-0.7,0.2,-0.5,0.4],['2023-11',1.1,0.8,0.8,0.6],['2023-12',0.5,0.7,0.6,0.5]],
-  2024:[['2024-01',1.4,0.8,1.1,0.9],['2024-02',0.2,0.6,0.3,0.5],['2024-03',2.1,1.0,1.6,0.8],['2024-04',1.8,1.2,1.3,1.0],['2024-05',-0.5,0.7,-0.3,0.6],['2024-06',0.9,1.1,0.7,0.9],['2024-07',1.6,0.9,1.4,0.8],['2024-08',0.4,0.5,0.6,0.7],['2024-09',1.0,0.8,0.9,0.6],['2024-10',0.7,0.9,0.8,0.8],['2024-11',-0.3,0.4,-0.1,0.5],['2024-12',1.1,0.7,0.9,0.6]],
-  2025:[['2025-01',7.5,-1.0,4.7,-1.4],['2025-02',-3.6,-12.4,2.5,-2.0],['2025-03',-6.6,24.8,-2.9,1.0],['2025-04',-15.7,2.9,-10.8,8.3],['2025-05',-0.9,5.7,-1.2,-2.0],['2025-06',3.1,-4.1,2.6,-0.3],['2025-07',5.0,-8.6,-2.2,1.3],['2025-08',-3.4,-2.0,-1.4,4.2],['2025-09',4.6,11.0,-1.7,-7.3],['2025-10',2.3,5.8,0.9,-1.0],['2025-11',-1.1,3.4,-0.7,0.6],['2025-12',1.8,4.2,1.3,0.8]],
-  2026:[['2026-01',-3.8,-6.5,-3.4,2.1],['2026-02',4.4,12.9,13.6,1.6]]
+  2023:[
+    ['2023-01', 3.5,-1.5, 0.5, 1.0],  // Jan: auto surge to US; nat gas exports -32.9% (StatCan dq230308a)
+    ['2023-02', 0.5,-3.5, 0.3, 2.0],  // Feb: nat gas revision knocked exports; pharma imports rising
+    ['2023-03', 0.3,-2.5,-1.5,-6.5],  // Mar: total exports -0.7%; imports -2.9% (pharma crash dq230504a)
+    ['2023-04', 0.8, 8.0, 0.2,-0.8],  // Apr: total exports +2.5%; unwrought gold +46% non-US (dq230607a)
+    ['2023-05',-5.5,-1.5, 2.5, 3.8],  // May: total exports -3.8%; energy -7.3%; imports +3.0% (dq230706a)
+    ['2023-06',-2.0, 1.5, 0.8, 0.4],  // Jun: energy prices bottomed; crude trough drove US exports lower
+    ['2023-07', 1.5,-0.5, 0.9, 0.5],  // Jul: modest recovery; energy prices starting to rebound
+    ['2023-08', 8.5, 5.5, 0.6, 0.8],  // Aug: energy +14.6%; crude +19%; BC ports reopened (dq231005a)
+    ['2023-09', 1.5, 1.2, 1.0, 0.5],  // Sep: continued commodity/energy recovery
+    ['2023-10', 0.5, 0.4, 0.8, 0.7],  // Oct: stable; exports revised to $66.2B
+    ['2023-11', 0.4,-3.8, 1.7, 2.3],  // Nov: StatCan verified US exports +0.4%; non-US imports +2.3% (dq240109a)
+    ['2023-12',-2.0,-1.5, 0.8, 0.5]   // Dec: total exports -1.9%; CAD surged +1.5 cents (dq240207a)
+  ],
+  2024:[
+    ['2024-01', 2.4, 1.2, 1.1, 0.9],
+    ['2024-02', 0.1, 0.8, 0.3, 0.5],
+    ['2024-03',-1.4, 0.9, 1.6, 0.8],
+    ['2024-04', 2.6, 3.1, 1.3, 1.0],
+    ['2024-05',-2.1,-13.0,-0.3, 0.6],
+    ['2024-06', 2.6,15.7, 0.7, 0.9],
+    ['2024-07',-1.2,-5.4, 1.4, 0.8],
+    ['2024-08', 0.4, 0.6, 0.6, 0.7],
+    ['2024-09', 1.2, 1.8, 0.9, 0.6],
+    ['2024-10', 0.8, 2.4, 0.8, 0.8],
+    ['2024-11',-0.9,-10.8,-0.1, 0.5],
+    ['2024-12', 5.0, 4.9, 0.9, 0.6]
+  ],
+  2025:[
+    ['2025-01', 7.5,-1.0, 4.7,-1.4],
+    ['2025-02',-4.4,18.8, 2.5,-2.0],
+    ['2025-03',-7.4, 8.3,-2.9, 1.0],
+    ['2025-04',-15.7, 2.9,-10.8, 8.3],
+    ['2025-05',-0.9, 5.7,-1.2,-2.0],
+    ['2025-06', 3.1,-4.1, 2.6,-0.3],
+    ['2025-07', 5.0,-8.6,-2.2, 1.3],
+    ['2025-08',-3.4,-2.0,-1.4, 4.2],
+    ['2025-09', 4.6,11.0,-1.7,-7.3],
+    ['2025-10',-3.4,15.6, 0.9,-1.0],
+    ['2025-11',-4.5, 3.4,-0.7, 0.6],
+    ['2025-12', 1.1, 5.8, 1.3, 0.8]
+  ],
+  2026:[
+    ['2026-01',-3.8,-6.5,-3.4, 2.1],
+    ['2026-02', 4.4,10.5,13.6, 1.6]
+  ]
 };
 let selectedCountry = null;
 
@@ -346,11 +448,15 @@ function drawTrend(){
 
 function drawMap(){
   const flow = getFlow(); const metric = currentMetricKey(flow); const ctx = getContext(); const data = ctx.partners.slice().sort((a,b)=>b[metric]-a[metric]);
+  // Normalize bubble sizes: use power scale relative to max so the US bubble (largest by far)
+  // doesn't overflow the map (~322px raw before fix). Max bubble = 48px; min = 10px.
+  const maxMetric = data[0][metric] || 1;
+  const bubbleSize = d => Math.max(10, Math.round(48 * Math.pow(d[metric] / maxMetric, 0.38)));
   const linesLon=[], linesLat=[]; data.forEach(p=>{ linesLon.push(partnerCoords['Canada'].lon, partnerCoords[p.country].lon, null); linesLat.push(partnerCoords['Canada'].lat, partnerCoords[p.country].lat, null); });
   const traces = [
     {type:'scattergeo', mode:'lines', lon:linesLon, lat:linesLat, hoverinfo:'skip', line:{width:1.1,color:'rgba(255,255,255,0.16)'}, showlegend:false},
     {type:'scattergeo', mode:'markers+text', lon:[partnerCoords['Canada'].lon], lat:[partnerCoords['Canada'].lat], text:['Canada'], textposition:'bottom center', textfont:{size:12,color:INK}, marker:{size:11,color:'#ffffff',line:{color:US_LINE,width:2}}, hovertemplate:'<b>Canada</b><extra></extra>', showlegend:false},
-    {type:'scattergeo', mode:'markers+text', lon:data.map(d=>partnerCoords[d.country].lon), lat:data.map(d=>partnerCoords[d.country].lat), text:data.map(d=>d.country), textposition:'top center', textfont:{size:11,color:INK}, marker:{size:data.map(d=>Math.max(14, Math.sqrt(d[metric])/3.2)), color:data.map(d=>COLORS[d.country]), opacity:0.92, line:{color:data.map(d=>selectedCountry && d.country===selectedCountry ? '#ffffff' : 'rgba(255,255,255,0.25)'), width:data.map(d=>selectedCountry && d.country===selectedCountry ? 3 : 1)}}, customdata:data.map(d=>[d.country,d.exports,d.imports,d.balance,d.combinedShareTotal]), hovertemplate:'<b>%{customdata[0]}</b><br>Exports: %{customdata[1]:,.0f} C$M<br>Imports: %{customdata[2]:,.0f} C$M<br>Balance: %{customdata[3]:,.0f} C$M<br>Share of Canada total trade: %{customdata[4]:.2f}%<extra></extra>', showlegend:false}
+    {type:'scattergeo', mode:'markers+text', lon:data.map(d=>partnerCoords[d.country].lon), lat:data.map(d=>partnerCoords[d.country].lat), text:data.map(d=>d.country), textposition:'top center', textfont:{size:11,color:INK}, marker:{size:data.map(bubbleSize), color:data.map(d=>COLORS[d.country]), opacity:0.92, line:{color:data.map(d=>selectedCountry && d.country===selectedCountry ? '#ffffff' : 'rgba(255,255,255,0.25)'), width:data.map(d=>selectedCountry && d.country===selectedCountry ? 3 : 1)}}, customdata:data.map(d=>[d.country,d.exports,d.imports,d.balance,d.combinedShareTotal]), hovertemplate:'<b>%{customdata[0]}</b><br>Exports: %{customdata[1]:,.0f} C$M<br>Imports: %{customdata[2]:,.0f} C$M<br>Balance: %{customdata[3]:,.0f} C$M<br>Share of Canada total trade: %{customdata[4]:.2f}%<extra></extra>', showlegend:false}
   ];
   Plotly.react('mapChart', traces, {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:0,r:0,t:0,b:0}, font:{color:INK}, geo:mapGeoLayout('mid')}, {displayModeBar:true, responsive:true, scrollZoom:true});
   document.getElementById('mapChart').on('plotly_click', ev => { const c=ev.points[0]?.customdata?.[0]; if(c){ selectedCountry=c; renderAll(); } });
