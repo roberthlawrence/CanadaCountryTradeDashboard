@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Canada Trade Under Tariff Pressure — Dashboard v22 — StatCan Verified</title>
+  <title>Canada Trade Under Tariff Pressure — Dashboard v24 — StatCan Verified</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     :root{
@@ -59,15 +59,87 @@
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 
     .chart{width:100%;max-width:100%;overflow:hidden}
-    @media (max-width: 1100px){.sticky-grid{grid-template-columns:1fr}.sticky-insight{order:3}.grid-2{grid-template-columns:1fr}.sticky-shell{position:static;top:auto;background:none;backdrop-filter:none;padding-top:0}.sticky-grid,.sticky-main,.topbar,.banner{margin-bottom:8px}.controls-bar{position:sticky;top:0;z-index:1001;background:linear-gradient(180deg, rgba(6,13,24,.98) 0%, rgba(6,13,24,.94) 84%, rgba(6,13,24,0) 100%);backdrop-filter:blur(8px)}}
+
+    /* ── Desktop chart heights ── */
+    .chart{width:100%;height:430px}.chart.tall{height:470px}.chart.short{height:390px}
+
+    /* ── Map: container height is set to match the visible content area.
+          With scale:1.1 the projection slightly overflows the container in both
+          axes so the geo content fills edge-to-edge with no grey bars.
+          clamp keeps it from going too short (mobile) or too tall (ultrawide). ── */
+    #mapChart{height:clamp(300px,34vw,440px) !important}
+
+    /* ── Narrow window (≤1100px):
+          sticky-shell un-sticks completely.
+          controls-bar uses position:FIXED (not sticky) so it stays pinned at the
+          viewport top for the full page scroll — sticky is bounded by its containing
+          block (.sticky-shell, ~220px tall) and scrolls away once that block exits
+          the viewport. Fixed has no such constraint. ── */
+    @media (max-width:1100px){
+      .sticky-grid{grid-template-columns:1fr}
+      .sticky-insight{order:3}
+      .grid-2{grid-template-columns:1fr}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .sticky-shell{position:static;top:auto;background:none;backdrop-filter:none;padding-top:0}
+      .sticky-grid,.sticky-main,.topbar,.banner{margin-bottom:8px}
+      /* Top padding on wrap compensates for the fixed bar taking up viewport space */
+      .wrap{padding-top:70px}
+      .controls-bar{
+        position:fixed;top:0;left:0;right:0;   /* viewport-anchored, not block-bounded */
+        z-index:1001;
+        margin:0;                               /* reset any margins — fixed ignores them */
+        border-radius:0 0 18px 18px;
+        padding:10px 18px;
+        background:rgba(6,13,24,.97);
+        backdrop-filter:blur(12px);
+        box-shadow:0 4px 24px rgba(0,0,0,.45);
+        justify-content:flex-start;
+      }
+    }
+
+    /* ── Mobile (≤640px): tighter everything, smaller font, hide non-essential chrome ── */
+    @media (max-width:640px){
+      /* wrap: inherit fixed-bar compensation from narrow breakpoint, shrink side padding */
+      .wrap{padding:10px;padding-top:62px}
+      h1{font-size:21px;line-height:1.1}
+      h1 span{font-size:12px}
+      .subhead{font-size:13px;margin-bottom:6px}
+      .subtitle{display:none}
+      .pill-row{display:none}
+      .hero{padding:14px 14px 12px}
+      .kpi-grid{grid-template-columns:1fr 1fr;gap:7px}
+      .kpi{padding:7px 9px 7px}
+      .kpi .label{font-size:9px}
+      .kpi .value{font-size:18px}
+      .kpi .meta{display:none}
+      .sticky-insight{display:none}
+      .mini-metrics{gap:4px}
+      .metric{min-width:70px;padding:3px 6px}
+      .metric .label{font-size:7px}
+      .metric .value{font-size:12px}
+      /* filter bar: compact, inherits position:fixed from narrow breakpoint */
+      .controls-bar{padding:7px 10px;border-radius:0 0 14px 14px}
+      label{font-size:10px}
+      select,button{font-size:11px;padding:6px 8px;border-radius:10px}
+      h2{font-size:15px}
+      .desc{font-size:12px}
+      .chart.tall{height:300px}
+      .chart{height:280px}
+      .chart.short{height:250px}
+      #mapChart{height:clamp(200px,68vw,300px) !important}
+      .legend{gap:10px}
+      .legend-item{font-size:11px}
+      .note{font-size:11px}
+      .sources summary{font-size:13px}
+      .sources ul{font-size:12px}
+    }
+
     .title-row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
     h2{margin:0;font-size:20px;line-height:1.2}.desc{color:var(--muted);font-size:13px;line-height:1.48;max-width:860px;margin-top:6px}
-    .chart{width:100%;height:430px}.chart.tall{height:470px}.chart.short{height:390px}
     .note{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.48;padding-top:10px;border-top:1px solid var(--border)}
     .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
     .legend-line{width:28px;height:3px;border-radius:999px;background:var(--accent)}
     .sources{margin-top:16px}.sources summary{cursor:pointer;font-weight:700;font-size:15px}.sources ul{margin:12px 0 0 0;padding-left:18px;color:var(--muted);line-height:1.6;font-size:13px}.sources a{color:#9ec5ff;text-decoration:none}.sources a:hover{text-decoration:underline}
-    @media (max-width:1150px){.kpi-grid,.grid-2,.selection-wrap{grid-template-columns:1fr}.controls-bar{justify-content:flex-start}}
   </style>
 </head>
 <body>
@@ -344,16 +416,22 @@ function mapGeoLayout(mode='mid'){
     showland:true, landcolor:'#1e2a49',
     showcountries:true, countrycolor:'rgba(255,255,255,0.14)',
     coastlinecolor:'rgba(255,255,255,0.12)',
-    center:{lat:56, lon:-96},
+    // Lower center.lat (56→38) so the North Pole cap sits near the top edge
+    // rather than leaving a large empty band above the geographic content.
+    center:{lat:38, lon:-96},
     domain:{x:[0,1], y:[0,1]}
   };
   if(mode==='full'){
-    return {...common, projection:{type:'natural earth', scale:0.82, rotation:{lon:-96}}, lataxis:{range:[-12,85]}, lonaxis:{range:[-180,180]}};
+    return {...common, center:{lat:30,lon:-96}, projection:{type:'natural earth', scale:0.88, rotation:{lon:-96}}, lataxis:{range:[-50,85]}, lonaxis:{range:[-180,180]}};
   }
   if(mode==='tight'){
-    return {...common, projection:{type:'natural earth', scale:1.08, rotation:{lon:-96}}, lataxis:{range:[20,82]}, lonaxis:{range:[-180,180]}};
+    return {...common, projection:{type:'natural earth', scale:1.12, rotation:{lon:-96}}, lataxis:{range:[-10,82]}, lonaxis:{range:[-180,180]}};
   }
-  return {...common, projection:{type:'natural earth', scale:0.90, rotation:{lon:-96}}, lataxis:{range:[10,85]}, lonaxis:{range:[-180,180]}};
+  // 'mid' default: scale 1.1 so the projection slightly overflows the container
+  // both horizontally and vertically — the container then clips edge-to-edge with
+  // no grey bars. lataxis [-25,82] supplies enough south latitude that the bottom
+  // of the container shows ocean/land rather than empty paper_bgcolor.
+  return {...common, projection:{type:'natural earth', scale:1.1, rotation:{lon:-96}}, lataxis:{range:[-25,82]}, lonaxis:{range:[-180,180]}};
 }
 function applyMapZoom(mode){
   Plotly.relayout('mapChart', {geo: mapGeoLayout(mode)});
@@ -458,7 +536,11 @@ function drawMap(){
     {type:'scattergeo', mode:'markers+text', lon:[partnerCoords['Canada'].lon], lat:[partnerCoords['Canada'].lat], text:['Canada'], textposition:'bottom center', textfont:{size:12,color:INK}, marker:{size:11,color:'#ffffff',line:{color:US_LINE,width:2}}, hovertemplate:'<b>Canada</b><extra></extra>', showlegend:false},
     {type:'scattergeo', mode:'markers+text', lon:data.map(d=>partnerCoords[d.country].lon), lat:data.map(d=>partnerCoords[d.country].lat), text:data.map(d=>d.country), textposition:'top center', textfont:{size:11,color:INK}, marker:{size:data.map(bubbleSize), color:data.map(d=>COLORS[d.country]), opacity:0.92, line:{color:data.map(d=>selectedCountry && d.country===selectedCountry ? '#ffffff' : 'rgba(255,255,255,0.25)'), width:data.map(d=>selectedCountry && d.country===selectedCountry ? 3 : 1)}}, customdata:data.map(d=>[d.country,d.exports,d.imports,d.balance,d.combinedShareTotal]), hovertemplate:'<b>%{customdata[0]}</b><br>Exports: %{customdata[1]:,.0f} C$M<br>Imports: %{customdata[2]:,.0f} C$M<br>Balance: %{customdata[3]:,.0f} C$M<br>Share of Canada total trade: %{customdata[4]:.2f}%<extra></extra>', showlegend:false}
   ];
-  Plotly.react('mapChart', traces, {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:0,r:0,t:0,b:0}, font:{color:INK}, geo:mapGeoLayout('mid')}, {displayModeBar:true, responsive:true, scrollZoom:true});
+  // Pass explicit height matching the CSS-sized container so the natural-earth projection
+  // fills the full panel height rather than centering in grey space.
+  const mapEl = document.getElementById('mapChart');
+  const mapH = mapEl.offsetHeight || 470;
+  Plotly.react('mapChart', traces, {paper_bgcolor:PAPER_BG, plot_bgcolor:PLOT_BG, margin:{l:0,r:0,t:0,b:0}, height:mapH, font:{color:INK}, geo:mapGeoLayout('mid')}, {displayModeBar:true, responsive:true, scrollZoom:true});
   document.getElementById('mapChart').on('plotly_click', ev => { const c=ev.points[0]?.customdata?.[0]; if(c){ selectedCountry=c; renderAll(); } });
 }
 
@@ -508,6 +590,21 @@ document.getElementById('resetAllBtn').addEventListener('click', ()=>{
 });
 document.getElementById('mapZoomMidBtn').addEventListener('click', ()=>applyMapZoom('mid'));
 renderAll();
+
+// ── Map resize: re-render with updated height whenever the CSS clamp changes the container ──
+// ResizeObserver fires on any size change (window resize, orientation change, etc.)
+if (typeof ResizeObserver !== 'undefined') {
+  const mapEl = document.getElementById('mapChart');
+  let mapResizeTimer;
+  new ResizeObserver(() => {
+    // Debounce slightly so we don't thrash during window drag
+    clearTimeout(mapResizeTimer);
+    mapResizeTimer = setTimeout(() => {
+      const h = mapEl.offsetHeight;
+      if (h > 0) Plotly.relayout('mapChart', {height: h});
+    }, 80);
+  }).observe(mapEl);
+}
 </script>
 </body>
 </html>
